@@ -1,101 +1,147 @@
-import Image from "next/image";
+"use client";
+import { useState, useRef } from "react";
+import {
+  ReactSketchCanvas,
+  type ReactSketchCanvasRef,
+} from "react-sketch-canvas";
+import { FaUndo, FaRedo } from "react-icons/fa"; // Importing icons
 
-export default function Home() {
+const PaintApp = () => {
+  const [color, setColor] = useState("#ffffff"); // Default brush color
+  const [brushSize, setBrushSize] = useState(4);
+  const [isEraser, setIsEraser] = useState(false);
+  const canvasRef = useRef<ReactSketchCanvasRef | null>(null); // Reference for the canvas, initialized with null
+
+  const toggleEraser = () => {
+    setIsEraser((prev) => !prev);
+    setColor(isEraser ? "#00aaff" : "black"); // Use black as the eraser for the black canvas
+  };
+
+  const clearCanvas = () => {
+    if (canvasRef.current) {
+      canvasRef.current.clearCanvas(); // Clear the canvas
+    }
+  };
+
+  const undoLastAction = () => {
+    if (canvasRef.current) {
+      canvasRef.current.undo(); // Undo the last action
+    }
+  };
+
+  const redoLastAction = () => {
+    if (canvasRef.current) {
+      canvasRef.current.redo(); // Redo the last undone action
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div
+      style={{
+        backgroundColor: "#121212",
+        height: "100vh", // Full height
+        width: "100vw", // Full width
+        overflow: "hidden", // Prevent scrolling on both axes
+        position: "relative", // Position relative for floating controls
+      }}
+    >
+      {/* <h1 style={{ textAlign: "center", color: "#ffffff" }}>Paint App</h1> */}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      {/* Floating control panel */}
+      <div
+        style={{
+          position: "absolute",
+          top: "20px",
+          left: "20px",
+          zIndex: 10, // Ensure it floats above the canvas
+          display: "flex",
+          backgroundColor: "#333",
+          padding: "10px",
+          borderRadius: "10px",
+        }}
+      >
+        <input
+          type="color"
+          value={color}
+          onChange={(e) => setColor(e.target.value)}
+          disabled={isEraser} // Disable color selection when eraser is active
+          style={{ marginRight: "10px" }}
+        />
+        <input
+          type="range"
+          min="1"
+          max="20"
+          value={brushSize}
+          onChange={(e) => setBrushSize(parseInt(e.target.value))}
+          style={{ marginRight: "10px" }}
+        />
+        <button onClick={toggleEraser} style={{ marginRight: "10px" }}>
+          {isEraser ? (
+            <span role="img" aria-label="Eraser">🧽</span> // Eraser emoji
+          ) : (
+            <span role="img" aria-label="Pencil">✏️</span> // Pencil emoji
+          )}
+        </button>
+        <button
+          onClick={clearCanvas}
+          style={{
+            backgroundColor: "#ff4d4d",
+            color: "#fff",
+            border: "none",
+            borderRadius: "5px",
+            padding: "5px 10px",
+          }}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          Clear Canvas
+        </button>
+        {/* Undo Button */}
+        <button
+          onClick={undoLastAction}
+          style={{
+            backgroundColor: "#00aaff",
+            color: "#fff",
+            border: "none",
+            borderRadius: "5px",
+            padding: "5px 10px",
+            marginLeft: "10px",
+          }}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <FaUndo /> {/* Undo Icon */}
+        </button>
+        {/* Redo Button */}
+        <button
+          onClick={redoLastAction}
+          style={{
+            backgroundColor: "#00aaff",
+            color: "#fff",
+            border: "none",
+            borderRadius: "5px",
+            padding: "5px 10px",
+            marginLeft: "10px",
+          }}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <FaRedo /> {/* Redo Icon */}
+        </button>
+      </div>
+
+      {/* Canvas area */}
+      <div
+        style={{
+          width: "100%",
+          height: "100%", // Fill the entire viewport
+        }}
+      >
+        <ReactSketchCanvas
+          ref={canvasRef}
+          strokeColor={isEraser ? "black" : color} // Use black for eraser since the canvas is black
+          strokeWidth={brushSize}
+          canvasColor="black" // Canvas color set to black
+          width="100%"
+          height="100%"
+        />
+      </div>
     </div>
   );
-}
+};
+
+export default PaintApp;
