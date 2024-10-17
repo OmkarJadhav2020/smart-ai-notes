@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from 'fs'
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export const config = {
-    api: {
-        bodyParser: {
-            sizeLimit: "10mb", // Increase limit 
-        },
-    },
-};
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+if (!GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY is not defined in the environment variables");
+}
+
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export async function POST(req: NextRequest) {
@@ -93,3 +90,4 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+export const runtime = "nodejs";
