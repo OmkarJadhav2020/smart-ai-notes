@@ -1,59 +1,119 @@
 "use client";
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   ReactSketchCanvas,
   type ReactSketchCanvasRef,
 } from "react-sketch-canvas";
-import { FaUndo, FaRedo } from "react-icons/fa"; // Importing icons
+import { FaUndo, FaRedo } from "react-icons/fa";
+import axios from "axios";
+import Draggable from "react-draggable";
+
+
+const loadMathJax = () => {
+  const script = document.createElement("script");
+  script.src =
+    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML";
+  script.async = true;
+  document.head.appendChild(script);
+
+  script.onload = () => {
+    window.MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [
+          ["$", "$"],
+          ["\\(", "\\)"],
+        ],
+      },
+    });
+  };
+};
 
 const PaintApp = () => {
-  const [color, setColor] = useState("#ffffff"); // Default brush color
+  const [color, setColor] = useState("#ffffff"); 
   const [brushSize, setBrushSize] = useState(4);
   const [isEraser, setIsEraser] = useState(false);
-  const canvasRef = useRef<ReactSketchCanvasRef | null>(null); // Reference for the canvas, initialized with null
+  const [latexPosition, setLatexPosition] = useState({ x: 10, y: 200 }); 
+  const [latexExpression, setLatexExpression] = useState<string[]>([]);
+  const [dictOfVars, setDictOfVars] = useState<{ [key: string]: any }>({}); 
+  const canvasRef = useRef<ReactSketchCanvasRef | null>(null); 
+
+  useEffect(() => {
+    loadMathJax(); 
+  }, []);
+
+  useEffect(() => {
+    if (latexExpression.length > 0 && window.MathJax) {
+      setTimeout(() => {
+        window.MathJax.Hub.Queue(["Typeset", window.MathJax.Hub]);
+      }, 0);
+    }
+  }, [latexExpression]);
 
   const toggleEraser = () => {
     setIsEraser((prev) => !prev);
-    setColor(isEraser ? "#00aaff" : "black"); // Use black as the eraser for the black canvas
+    setColor(isEraser ? "#00aaff" : "black");
   };
 
   const clearCanvas = () => {
     if (canvasRef.current) {
-      canvasRef.current.clearCanvas(); // Clear the canvas
+      canvasRef.current.clearCanvas(); 
     }
+    setLatexExpression([]); 
+    setDictOfVars({}); 
   };
 
   const undoLastAction = () => {
     if (canvasRef.current) {
-      canvasRef.current.undo(); // Undo the last action
+      canvasRef.current.undo();
     }
   };
 
   const redoLastAction = () => {
     if (canvasRef.current) {
-      canvasRef.current.redo(); // Redo the last undone action
+      canvasRef.current.redo();
+    }
+  };
+
+  const runRoute = async () => {
+    if (canvasRef.current) {
+      const canvasData = await canvasRef.current.exportImage("png");
+
+      const response = await axios({
+        method: "post",
+        url: `${process.env.NEXT_PUBLIC_API_URL}/calculate`,
+        data: {
+          image: canvasData,
+          dict_of_vars: dictOfVars, // Send the dict_of_vars to the backend
+        },
+      });
+
+      const resp = response.data;
+      console.log(resp)
+      resp.data.forEach((data: { expr: string; result: any }) => {
+        const latex = `\\(\\LARGE{${data.expr} = ${data.result}}\\)`;
+        setLatexPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+        setLatexExpression((prev) => [...prev, latex]);
+
+        setDictOfVars((prev) => ({
+          ...prev,
+          [data.expr]: data.result,
+        }));
+      });
+      console.log(latexExpression);
+      console.log(latexPosition);
+      canvasRef.current.clearCanvas();
     }
   };
 
   return (
-    <div
-      style={{
-        backgroundColor: "#121212",
-        height: "100vh", // Full height
-        width: "100vw", // Full width
-        overflow: "hidden", // Prevent scrolling on both axes
-        position: "relative", // Position relative for floating controls
-      }}
-    >
-      {/* <h1 style={{ textAlign: "center", color: "#ffffff" }}>Paint App</h1> */}
-
+    <div className="relative w-full h-screen bg-gray-900 text-white overflow-hidden">
       {/* Floating control panel */}
       <div
         style={{
           position: "absolute",
           top: "20px",
           left: "20px",
-          zIndex: 10, // Ensure it floats above the canvas
+          zIndex: 10,
           display: "flex",
           backgroundColor: "#333",
           padding: "10px",
@@ -64,7 +124,7 @@ const PaintApp = () => {
           type="color"
           value={color}
           onChange={(e) => setColor(e.target.value)}
-          disabled={isEraser} // Disable color selection when eraser is active
+          disabled={isEraser}
           style={{ marginRight: "10px" }}
         />
         <input
@@ -77,9 +137,13 @@ const PaintApp = () => {
         />
         <button onClick={toggleEraser} style={{ marginRight: "10px" }}>
           {isEraser ? (
-            <span role="img" aria-label="Eraser">🧽</span> // Eraser emoji
+            <span role="img" aria-label="Eraser">
+              🧽
+            </span>
           ) : (
-            <span role="img" aria-label="Pencil">✏️</span> // Pencil emoji
+            <span role="img" aria-label="Pencil">
+              ✏️
+            </span>
           )}
         </button>
         <button
@@ -90,11 +154,24 @@ const PaintApp = () => {
             border: "none",
             borderRadius: "5px",
             padding: "5px 10px",
+            margin: "0px 5px",
           }}
         >
           Clear Canvas
         </button>
-        {/* Undo Button */}
+        <button
+          onClick={runRoute}
+          style={{
+            backgroundColor: "#ff4d4d",
+            color: "#fff",
+            border: "none",
+            borderRadius: "5px",
+            margin: "0px 5px",
+            padding: "5px 10px",
+          }}
+        >
+          Run
+        </button>
         <button
           onClick={undoLastAction}
           style={{
@@ -106,9 +183,8 @@ const PaintApp = () => {
             marginLeft: "10px",
           }}
         >
-          <FaUndo /> {/* Undo Icon */}
+          <FaUndo /> 
         </button>
-        {/* Redo Button */}
         <button
           onClick={redoLastAction}
           style={{
@@ -120,26 +196,29 @@ const PaintApp = () => {
             marginLeft: "10px",
           }}
         >
-          <FaRedo /> {/* Redo Icon */}
+          <FaRedo /> 
         </button>
       </div>
 
-      {/* Canvas area */}
-      <div
-        style={{
-          width: "100%",
-          height: "100%", // Fill the entire viewport
-        }}
-      >
-        <ReactSketchCanvas
-          ref={canvasRef}
-          strokeColor={isEraser ? "black" : color} // Use black for eraser since the canvas is black
-          strokeWidth={brushSize}
-          canvasColor="black" // Canvas color set to black
-          width="100%"
-          height="100%"
-        />
-      </div>
+      {latexExpression.map((latex, index) => (
+        <Draggable
+          key={index}
+          defaultPosition={latexPosition}
+          onStop={(e, data) => setLatexPosition({ x: data.x, y: data.y })}
+        >
+          <div className="absolute p-2 text-white rounded shadow-md">
+            <div className="latex-content">{latex}</div>
+          </div>
+        </Draggable>
+      ))}
+      <ReactSketchCanvas
+        ref={canvasRef}
+        strokeColor={isEraser ? "black" : color} 
+        strokeWidth={brushSize}
+        canvasColor="black" 
+        width="100%"
+        height="100%"
+      />
     </div>
   );
 };
