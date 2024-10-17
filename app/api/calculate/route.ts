@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         Make sure to use extra backslashes for escape characters like \\f -> \\\\f, \\n -> \\\\n, etc.
         Here is a dictionary of user-assigned variables. If the given expression has any of these variables, use its actual value from this dictionary accordingly: ${dict_of_vars_str}.
         DO NOT USE BACKTICKS OR MARKDOWN FORMATTING.
-        PROPERLY QUOTE THE KEYS AND VALUES IN THE OBJECT so it can be directly converted to json and parsed in javascript JSON.parse
+        PROPERLY QUOTE THE KEYS AND VALUES IN THE OBJECT so it can be directly converted to json and parsed in javascript JSON.parse and remeber for True use true and for False use false
         `;
 
         const base64Data = processedImage.split(",")[1];
@@ -64,14 +64,12 @@ export async function POST(req: NextRequest) {
             .replace(/```json|```/g, "")  // Remove markdown-like formatting
             .trim();  // Remove leading and trailing spaces or newlines
 
-
         let answers = [];
         try {
             answers = JSON.parse(cleanedResponse);
         } catch (error) {
             console.error("Error in parsing response from Gemini API:", error);
         }
-
 
         answers = answers.map((answer: { assign: boolean; }) => {
             answer.assign = 'assign' in answer ? true : false;
