@@ -8,12 +8,7 @@ Smart AI Notes is an intelligent note-taking app that solves mathematical and gr
 You can try out the live app here: [Smart AI Notes](https://smart-ai-notes.vercel.app/)
 
 ## 📹 Demo Video
-A demo video showing the working of the project is available below. You can also find the video at [Youtube](https://youtu.be/jN0tGNHqr6w).
-
-### Watch Demo:
-![Smart AI Notes Demo](./public/demo.mp4)
-
-> If the video doesn't play directly in your markdown viewer, you can download it [here](./public/demo.mp4).
+You can find demo video at [Youtube](https://youtu.be/jN0tGNHqr6w).
 
 ## Features
 - **Real-time problem solving**: Write any mathematical or graphical question and get instant answers.
