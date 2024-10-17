@@ -38,7 +38,8 @@ const WelcomeModal = () => {
 
               {/* Message Below the Video */}
               <p className="mt-4 text-sm md:text-base text-gray-400 text-center">
-                Watch the quick intro video to learn more about our prodcut!
+                Watch the quick intro video to learn more about our prodcut! <br />
+                Note : Better viewed at device with large screen.
               </p>
             </div>
           </div>
