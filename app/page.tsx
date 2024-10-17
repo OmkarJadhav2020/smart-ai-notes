@@ -34,7 +34,7 @@ const PaintApp = () => {
   const [isEraser, setIsEraser] = useState(false);
   const [latexPosition, setLatexPosition] = useState({ x: 10, y: 200 }); 
   const [latexExpression, setLatexExpression] = useState<string[]>([]);
-  const [dictOfVars, setDictOfVars] = useState<{ [key: string]: any }>({}); 
+  const [dictOfVars, setDictOfVars] = useState<{ [key: string]: unknown }>({}); 
   const canvasRef = useRef<ReactSketchCanvasRef | null>(null); 
 
   useEffect(() => {
@@ -89,7 +89,7 @@ const PaintApp = () => {
 
       const resp = response.data;
       console.log(resp)
-      resp.data.forEach((data: { expr: string; result: any }) => {
+      resp.data.forEach((data: { expr: string; result: unknown }) => {
         const latex = `\\(\\LARGE{${data.expr} = ${data.result}}\\)`;
         setLatexPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
         setLatexExpression((prev) => [...prev, latex]);

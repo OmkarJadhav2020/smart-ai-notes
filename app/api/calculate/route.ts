@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
 
         const processedImage = image;
-        const processedVars = Object.entries(dict_of_vars);
+        // const processedVars = Object.entries(dict_of_vars);
         const dict_of_vars_str = JSON.stringify(dict_of_vars, null, 2);
 
         const prompt = `
@@ -50,16 +50,16 @@ export async function POST(req: NextRequest) {
         const base64Data = processedImage.split(",")[1];
 
         const sendImage = {
-            inlineData : {
-                data :base64Data,
-                mimeType : "image/png",
+            inlineData: {
+                data: base64Data,
+                mimeType: "image/png",
             },
         }
-        const result = await model.generateContent([prompt,sendImage]);
+        const result = await model.generateContent([prompt, sendImage]);
         const rawResponse = await result.response.text();
 
         // Clean up response
-        let cleanedResponse = rawResponse
+        const cleanedResponse = rawResponse
             .replace(/'/g, '"')    // Replace single quotes with double quotes for valid JSON
             .replace(/```json|```/g, "")  // Remove markdown-like formatting
             .trim();  // Remove leading and trailing spaces or newlines
@@ -80,14 +80,19 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             msg: "Data received successfully",
-            data: answers, 
+            data: answers,
             image: processedImage,
         });
-    } catch (error: any) {
+    }
+    catch (error: unknown) {
+        // Use type assertion to treat it as an Error
+        const errorMessage = (error instanceof Error) ? error.message : "Unknown error occurred";
+
         return NextResponse.json(
-            { error: "Error processing the request", details: error.message },
+            { error: "Error processing the request", details: errorMessage },
             { status: 500 }
         );
     }
+
 }
 export const runtime = "nodejs";
